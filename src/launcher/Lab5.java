@@ -4,44 +4,36 @@ import lejos.hardware.Button;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
-import lejos.hardware.port.Port;
-import lejos.hardware.sensor.EV3UltrasonicSensor;
-import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.SampleProvider;
+
 
 public class Lab5 {
+	//Constants
+	private static final double RIGHT_TARGET_ANGLE = 71.57;
+	private static final double LEFT_TARGET_ANGLE = 108.43;
+	private static final int LAUNCH_ROTATION = 90;
+	private static final int LAUNCH_SPEED = 875;
+	private static final int LAUNCH_ACCELERATION = 8000;
 	// Static Resources:
 	// Left motor connected to output A
 	// Right motor connected to output D
-	// Ultrasonic sensor port connected to input S1
-	// Touch sensor port connected to input S2
+	// Launch motor connected to output B
 	private static final EV3LargeRegulatedMotor leftMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
 	private static final EV3LargeRegulatedMotor rightMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 	private static final EV3LargeRegulatedMotor launchMotor = new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B"));
-	private static final Port usPort = LocalEV3.get().getPort("S1");		
-	private static final Port touchPort = LocalEV3.get().getPort("S2");
 	private static TextLCD LCD = LocalEV3.get().getTextLCD();
 
 	public static void main(String[] args)
 	{
-		//Setup ultrasonic sensor
-		// 1. Create a port object attached to a physical port (done above)
-		// 2. Create a sensor instance and attach to port
-		// 3. Create a sample provider instance for the above and initialize operating mode
-		// 4. Create a buffer for the sensor data
-		@SuppressWarnings("resource")							    	// Because we don't bother to close this resource
-		SensorModes usSensor = new EV3UltrasonicSensor(usPort);
-		SampleProvider usValue = usSensor.getMode("Distance");			// colorValue provides samples from this instance
-		float[] usData = new float[usValue.sampleSize()];				// colorData is the buffer in which data are returned
-
 		// setup the odometer and navigator
 		Odometer odo = new Odometer(leftMotor, rightMotor, 30, true);
 		Navigation navigator = new Navigation(odo);
 
 
 		int buttonChoice;
+		//Loop the program until the exit button is pressed
 		do
 		{
+			//Loop the display until either left, right or up is pressed
 			do
 			{
 				LCD.clear();
@@ -53,14 +45,18 @@ public class Lab5 {
 					&& buttonChoice != Button.ID_RIGHT
 					&& buttonChoice != Button.ID_UP);
 
+			/*
+			 * Based on the direction given, the robot should to face that direction 
+			 * and draw on the screen which way it is facing  
+			 */
 			if (buttonChoice == Button.ID_LEFT)
 			{ 
-				navigator.turnTo(108.43, true);
+				navigator.turnTo(LEFT_TARGET_ANGLE, true);
 				LCD.drawString("< Left >", 0, 2);
 			} 
 			else if(buttonChoice == Button.ID_RIGHT)
 			{
-				navigator.turnTo(71.57, true);
+				navigator.turnTo(RIGHT_TARGET_ANGLE, true);
 				LCD.drawString("< Right >", 0, 2);
 			}
 			else if(buttonChoice == Button.ID_UP)
@@ -68,11 +64,15 @@ public class Lab5 {
 				navigator.turnTo(90.0, true);
 				LCD.drawString("< Up >", 0, 2);
 			}
-			
-			launchMotor.setAcceleration(8000);
-			launchMotor.setSpeed(700);
-			launchMotor.rotate(120);
-			launchMotor.rotate(-120);
+			/*
+			 * Set the acceleration of the motor 
+			 * Set the speed of the motor
+			 * Rotate the forward 90 degrees to launch the ball
+			 */
+			launchMotor.setAcceleration(LAUNCH_ACCELERATION);
+			launchMotor.setSpeed(LAUNCH_SPEED);
+			launchMotor.rotate(LAUNCH_ROTATION);
+			launchMotor.rotate(-LAUNCH_ROTATION);
 		} while (buttonChoice != Button.ID_ESCAPE);
 		System.exit(0);
 	}
